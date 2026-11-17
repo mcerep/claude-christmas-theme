@@ -242,21 +242,33 @@ const groundFill = `<polygon points="${groundPts.join(' ')} ${240 * T},1000 ${-8
 
 // Falling snow: single tiles and five-tile crosses, from far above the picture
 // so a tall window is snowing all the way up.
-let snow = ''
-for (let i = 0; i < 40; i++) {
-  const col = ((i * 37 + 11) % 280) - 60
-  const dur = 22 + (i % 7) * 3
-  const begin = -((i * 53) % (dur * 10)) / 10
-  snow += `<g>${move('0 -1200;0 1000', dur, begin)}<use href="#f${i % 4}" x="${col * T}" y="0"/></g>`
+// Seeded random numbers, so the snow looks random but the file never changes.
+let seed = 20251224
+const rand = () => {
+  seed = (seed + 0x6d2b79f5) | 0
+  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296
 }
-for (let i = 0; i < 6; i++) {
-  const col = ((i * 23 + 5) % 270) - 55
-  const dur = 30 + i * 2
-  const begin = -((i * 71) % (dur * 10)) / 10
-  const cross = [[1, 0], [0, 1], [1, 1], [2, 1], [1, 2]]
-    .map(([x, y]) => `<use href="#f${(x + y) % 4}" x="${(col + x) * T}" y="${y * T}"/>`)
-    .join('')
-  snow += `<g>${move('0 -1200;0 1000', dur, begin)}${cross}</g>`
+
+// Each flake gets its own spot across the width (one per slice, jittered so
+// none bunch up), its own speed, its own start time and its own sideways drift.
+const FLAKES = 46
+const SNOW_LEFT = -400, SNOW_WIDTH = 2400
+let snow = ''
+for (let i = 0; i < FLAKES; i++) {
+  const col = Math.round((SNOW_LEFT + ((i + rand()) / FLAKES) * SNOW_WIDTH) / T)
+  const dur = Math.round(18 + rand() * 18)
+  const begin = -(rand() * dur).toFixed(1)
+  const drift = Math.round((rand() - 0.5) * 140)
+  const path = `0 -1200;${drift} 1000`
+  const flake =
+    rand() < 0.14
+      ? [[1, 0], [0, 1], [1, 1], [2, 1], [1, 2]]
+          .map(([x, y]) => `<use href="#f${(x + y) % 4}" x="${(col + x) * T}" y="${y * T}"/>`)
+          .join('')
+      : `<use href="#f${Math.floor(rand() * 4)}" x="${col * T}" y="0"/>`
+  snow += `<g>${move(path, dur, begin)}${flake}</g>`
 }
 
 // Stars live on the sky layer, which fills the window.
@@ -298,7 +310,7 @@ ${SHADOW(shadowPath(MOON, MX + 1, MY + 2))}
 <use href="#moon" x="${MX * T}" y="${MY * T}"/>
 ${groundFill}
 ${groundTop}
-${SHADOW(TREES.map(([x, y]) => shadowPath(TREE, x + 1, y + 2)).join('') + shadowPath(HOUSE, HX + 1, HY + 2))}
+${SHADOW(TREES.map(([x, y]) => shadowPath(TREE, x + 2, y)).join('') + shadowPath(HOUSE, HX + 2, HY))}
 ${TREES.map(([x, y]) => `<use href="#tree" x="${x * T}" y="${y * T}"/>`).join('')}
 <use href="#house" x="${HX * T}" y="${HY * T}"/>
 <circle cx="${(HX + 5) * T + 4.5}" cy="${winY}" r="38" fill="url(#wglow)" opacity="0.35">${fade('0.35;0.6;0.35', 3.5)}</circle>
