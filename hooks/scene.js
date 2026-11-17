@@ -80,6 +80,28 @@ function tiles(rows, ox = 0, oy = 0, salt = 0) {
   return out
 }
 
+// A sprite's blocky drop shadow as one plain path: each row's run of tiles
+// becomes one rectangle. No filter, so it costs nothing to redraw.
+function shadowPath(rows, ox = 0, oy = 0) {
+  let d = ''
+  rows.forEach((row, y) => {
+    let x = 0
+    while (x < row.length) {
+      if (!(row[x] in PALETTE)) {
+        x++
+        continue
+      }
+      let e = x
+      while (e < row.length && row[e] in PALETTE) e++
+      const w = (e - x) * T - 1
+      d += `M${(ox + x) * T} ${(oy + y) * T}h${w}v${S}h${-w}z`
+      x = e
+    }
+  })
+  return d
+}
+const SHADOW = (d) => `<path d="${d}" fill="#040a1e" fill-opacity="0.6"/>`
+
 // ---------- Pixel maps ----------
 
 const MOON = [
@@ -181,6 +203,7 @@ DEER_X.forEach((dx, i) => {
   teamBody += tiles(DEER, dx, 3, i)
 })
 teamBody += tiles(['yy'], 19, 8) + tiles(['y'], 31, 8) + tiles(['y'], 42, 8)
+const teamShadow = SHADOW(shadowPath(SLEIGH, 1, 5) + DEER_X.map(dx => shadowPath(DEER, dx + 1, 5)).join(''))
 const legsA = DEER_X.map((dx, i) => tiles(LEGS_A, dx, 10, i)).join('')
 const legsB = DEER_X.map((dx, i) => tiles(LEGS_B, dx, 10, i)).join('')
 const nose = `<use href="#z0" x="${(43 + 9) * T}" y="${6 * T}">${blink('1;0.18', 1)}</use>`
@@ -220,13 +243,13 @@ const groundFill = `<polygon points="${groundPts.join(' ')} ${240 * T},1000 ${-8
 // Falling snow: single tiles and five-tile crosses, from far above the picture
 // so a tall window is snowing all the way up.
 let snow = ''
-for (let i = 0; i < 80; i++) {
+for (let i = 0; i < 40; i++) {
   const col = ((i * 37 + 11) % 280) - 60
   const dur = 22 + (i % 7) * 3
   const begin = -((i * 53) % (dur * 10)) / 10
   snow += `<g>${move('0 -1200;0 1000', dur, begin)}<use href="#f${i % 4}" x="${col * T}" y="0"/></g>`
 }
-for (let i = 0; i < 12; i++) {
+for (let i = 0; i < 6; i++) {
   const col = ((i * 23 + 5) % 270) - 55
   const dur = 30 + i * 2
   const begin = -((i * 71) % (dur * 10)) / 10
@@ -252,10 +275,8 @@ export const SCENE = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" heigh
 <defs>
 <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#060d22"/><stop offset="0.55" stop-color="#0d1d47"/><stop offset="1" stop-color="#1c3a78"/></linearGradient>
 <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="1.5" height="1.5" fill="#a9c2ff"/></pattern>
-<filter id="bl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="30"/></filter>
-<filter id="soft" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="8"/></filter>
-<filter id="gl" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-<filter id="sh" x="-5%" y="-5%" width="115%" height="120%"><feFlood flood-color="#040a1e" flood-opacity="0.6"/><feComposite in2="SourceAlpha" operator="in"/></filter>
+<radialGradient id="mglow"><stop offset="0" stop-color="#fff2c4" stop-opacity="0.45"/><stop offset="1" stop-color="#fff2c4" stop-opacity="0"/></radialGradient>
+<radialGradient id="wglow"><stop offset="0" stop-color="#ffb84a" stop-opacity="0.9"/><stop offset="1" stop-color="#ffb84a" stop-opacity="0"/></radialGradient>
 <style>
 text{font:700 6px monospace;text-anchor:middle}
 </style>
@@ -272,20 +293,19 @@ ${STARS}
 </svg>
 <svg width="100%" height="100%" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMax meet" overflow="visible">
 <rect x="-2000" y="-2000" width="5600" height="3000" fill="url(#grid)" opacity="0.12"/>
-<circle cx="${mx}" cy="${my}" r="120" fill="#fff2c4" opacity="0.2" filter="url(#bl)"/>
-<use href="#moon" x="${MX * T + T}" y="${MY * T + 2 * T}" filter="url(#sh)"/>
+<circle cx="${mx}" cy="${my}" r="170" fill="url(#mglow)"/>
+${SHADOW(shadowPath(MOON, MX + 1, MY + 2))}
 <use href="#moon" x="${MX * T}" y="${MY * T}"/>
 ${groundFill}
 ${groundTop}
-${TREES.map(([x, y]) => `<use href="#tree" x="${x * T + T}" y="${y * T + 2 * T}" filter="url(#sh)"/>`).join('')}
-<use href="#house" x="${HX * T + T}" y="${HY * T + 2 * T}" filter="url(#sh)"/>
+${SHADOW(TREES.map(([x, y]) => shadowPath(TREE, x + 1, y + 2)).join('') + shadowPath(HOUSE, HX + 1, HY + 2))}
 ${TREES.map(([x, y]) => `<use href="#tree" x="${x * T}" y="${y * T}"/>`).join('')}
 <use href="#house" x="${HX * T}" y="${HY * T}"/>
-<circle cx="${(HX + 5) * T + 4.5}" cy="${winY}" r="20" fill="#ffb84a" filter="url(#soft)" opacity="0.35">${fade('0.35;0.6;0.35', 3.5)}</circle>
-<circle cx="${(HX + 15) * T + 4.5}" cy="${winY}" r="20" fill="#ffb84a" filter="url(#soft)" opacity="0.35">${fade('0.35;0.6;0.35', 3.5, -1.7)}</circle>
-<g filter="url(#gl)">${BULBS}</g>
+<circle cx="${(HX + 5) * T + 4.5}" cy="${winY}" r="38" fill="url(#wglow)" opacity="0.35">${fade('0.35;0.6;0.35', 3.5)}</circle>
+<circle cx="${(HX + 15) * T + 4.5}" cy="${winY}" r="38" fill="url(#wglow)" opacity="0.35">${fade('0.35;0.6;0.35', 3.5, -1.7)}</circle>
+${BULBS}
 <g>${move(flyPath, 26, 0, true)}<g>${move('0 0;0 -6', 0.9, 0, true)}
-<use href="#team" x="${T}" y="${2 * T}" filter="url(#sh)"/>
+${teamShadow}
 <use href="#team"/>
 <g>${blink('1;0', 0.5)}${legsA}</g><g>${blink('0;1', 0.5)}${legsB}</g>
 ${nose}
