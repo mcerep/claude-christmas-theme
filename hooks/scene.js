@@ -8,6 +8,12 @@
 //   - the picture (moon, house, trees, sleigh, snow) always fits whole (meet),
 //     anchored to the bottom, with snow, grid and ground running past its edges.
 
+// Every animation's period divides this evenly (sleigh 26s, snow 17.33s or
+// 26s, lights 1.3s, stars 2.6s, glow 3.25s, bob 1s, legs 0.5s, nose 1s), so
+// at each multiple of it the whole scene is back where it started. The mod
+// reloads the backdrop on that beat, which unfreezes it without a visible jump.
+export const LOOP_SECONDS = 52
+
 const T = 10 // tile pitch
 const S = 9 // tile size
 
@@ -229,7 +235,7 @@ for (let r = 10; r >= 3; r--) bulbPts.push([(HX + 8 + r) * T + S - 4, (HY + r) *
 const BULBS = bulbPts
   .map(
     ([x, y], i) =>
-      `<use href="#L${BULB_KEYS[i % 5]}" x="${x}" y="${y}">${blink('1;0.15;0.15;0.15', 1.2, -((i % 4) * 0.3).toFixed(1))}</use>`,
+      `<use href="#L${BULB_KEYS[i % 5]}" x="${x}" y="${y}">${blink('1;0.15;0.15;0.15', 1.3, -((i % 4) * 0.325).toFixed(3))}</use>`,
   )
   .join('')
 
@@ -266,7 +272,8 @@ const SNOW_LEFT = -400, SNOW_WIDTH = 2400
 let snow = ''
 for (let i = 0; i < FLAKES; i++) {
   const col = Math.round((SNOW_LEFT + ((i + rand()) / FLAKES) * SNOW_WIDTH) / T)
-  const dur = Math.round(18 + rand() * 18)
+  // Two fall speeds, both dividing LOOP_SECONDS evenly (see the note there).
+  const dur = rand() < 0.5 ? +(LOOP_SECONDS / 3).toFixed(4) : LOOP_SECONDS / 2
   const begin = -(rand() * dur).toFixed(1)
   const drift = Math.round((rand() - 0.5) * 140)
   const path = `0 -1200;${drift} 1000`
@@ -327,10 +334,10 @@ ${TREES.map(([x, y]) => `<use href="#tree" x="${x * T}" y="${y * T}"/>`).join(''
 <use href="#house" x="${HX * T}" y="${HY * T}"/>
 ${TREES.map(([x]) => tiles(['w'.repeat(17)], x - 2, GROUND, 3)).join('')}
 ${tiles(['w'.repeat(25)], HX - 2, GROUND, 5)}
-<circle cx="${(HX + 5) * T + 4.5}" cy="${winY}" r="38" fill="url(#wglow)" opacity="0.35">${fade('0.35;0.6;0.35', 3.5)}</circle>
-<circle cx="${(HX + 15) * T + 4.5}" cy="${winY}" r="38" fill="url(#wglow)" opacity="0.35">${fade('0.35;0.6;0.35', 3.5, -1.7)}</circle>
+<circle cx="${(HX + 5) * T + 4.5}" cy="${winY}" r="38" fill="url(#wglow)" opacity="0.35">${fade('0.35;0.6;0.35', 3.25)}</circle>
+<circle cx="${(HX + 15) * T + 4.5}" cy="${winY}" r="38" fill="url(#wglow)" opacity="0.35">${fade('0.35;0.6;0.35', 3.25, -1.625)}</circle>
 ${BULBS}
-<g transform="translate(${REST_TEAM})">${move(flyPath, 26, 0, true)}<g>${move('0 0;0 -6', 0.9, 0, true)}
+<g transform="translate(${REST_TEAM})">${move(flyPath, 26, 0, true)}<g>${move('0 0;0 -6', 1, 0, true)}
 ${teamShadow}
 <use href="#team"/>
 <g>${blink('1;0', 0.5)}${legsA}</g><g opacity="0">${blink('0;1', 0.5)}${legsB}</g>
