@@ -1,7 +1,7 @@
 import type { Register, ThemeSetArgs } from 'claude-code'
 
 import { makeColors } from './make-colors.js'
-import { LOOP_SECONDS, SCENE } from './scene.js'
+import { SCENE } from './scene.js'
 
 // Midnight-blue Christmas Eve. The scene is always night, so the theme is
 // dark-only: light text in either app mode. Secondary and muted text (the
@@ -31,13 +31,6 @@ const LOOK: ThemeSetArgs = {
   backdrop: { scene: 'christmas', glass: { blur: 4, tint: '#0a1326', opacity: 0.55 } },
 }
 
-// The app sometimes freezes the backdrop (after a resize, in split screen) and
-// only restarts it when it loads the drawing again. So every LOOP_SECONDS the
-// mod hands it a freshly stamped copy. Every animation in the scene repeats
-// evenly within that time, so the fresh copy starts on the same frame the old
-// one had reached: no visible jump when it's running, and a thaw when it isn't.
-let reloads = 0
-
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     const unpainted = problems.find(line => line.startsWith("Desktop won't paint"))
@@ -45,11 +38,6 @@ export const register: Register = on => {
 
     const set = await $.theme.set(LOOK)
     if (!set.isDrawn) $.ui.status(set.reason)
-
-    $.clock.every(LOOP_SECONDS * 1000, () => {
-      reloads++
-      $.ui.invalidate('ui.render')
-    })
 
     return next(e)
   })
@@ -60,7 +48,7 @@ export const register: Register = on => {
     const { Svg } = $.ui.resolve(e)
     return (
       <Svg
-        source={SCENE.replace('<defs>', `<!-- copy ${reloads} --><defs>`)}
+        source={SCENE}
         alt="Pixel-tile mosaic of Christmas Eve: snow falling as Santa's sleigh and reindeer fly past the moon, over a house strung with twinkling lights"
         isInteractive
       />
