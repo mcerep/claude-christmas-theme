@@ -210,6 +210,10 @@ const nose = `<use href="#z0" x="${(43 + 9) * T}" y="${6 * T}">${blink('1;0.18',
 
 // The sleigh's flight: from off the left to off the right, climbing, in
 // 20-pixel hops so it moves like a sprite.
+// Where the team rests if the app draws the scene without animation: a point
+// on its flight path, heading up toward the moon. The animation overrides it.
+const REST_X = 760
+const REST_TEAM = `${REST_X} ${Math.round(420 - (270 * (REST_X + 1000)) / 3100)}`
 const FLY_STEPS = 155
 const flyPath = Array.from({ length: FLY_STEPS + 1 }, (_, i) => {
   const t = i / FLY_STEPS
@@ -272,7 +276,11 @@ for (let i = 0; i < FLAKES; i++) {
           .map(([x, y]) => `<use href="#f${(x + y) % 4}" x="${(col + x) * T}" y="${y * T}"/>`)
           .join('')
       : `<use href="#f${Math.floor(rand() * 4)}" x="${col * T}" y="0"/>`
-  snow += `<g>${move(path, dur, begin)}${flake}</g>`
+  // Resting spot, shown only if the app draws the scene without animation:
+  // spread evenly down the visible sky (golden-ratio steps), along its drift.
+  const restY = Math.round(-40 + 940 * ((i * 0.618034 + 0.3) % 1))
+  const restX = Math.round((drift * (restY + 1200)) / 2200)
+  snow += `<g transform="translate(${restX} ${restY})">${move(path, dur, begin)}${flake}</g>`
 }
 
 // Stars live on the sky layer, which fills the window.
@@ -322,10 +330,10 @@ ${tiles(['w'.repeat(25)], HX - 2, GROUND, 5)}
 <circle cx="${(HX + 5) * T + 4.5}" cy="${winY}" r="38" fill="url(#wglow)" opacity="0.35">${fade('0.35;0.6;0.35', 3.5)}</circle>
 <circle cx="${(HX + 15) * T + 4.5}" cy="${winY}" r="38" fill="url(#wglow)" opacity="0.35">${fade('0.35;0.6;0.35', 3.5, -1.7)}</circle>
 ${BULBS}
-<g>${move(flyPath, 26, 0, true)}<g>${move('0 0;0 -6', 0.9, 0, true)}
+<g transform="translate(${REST_TEAM})">${move(flyPath, 26, 0, true)}<g>${move('0 0;0 -6', 0.9, 0, true)}
 ${teamShadow}
 <use href="#team"/>
-<g>${blink('1;0', 0.5)}${legsA}</g><g>${blink('0;1', 0.5)}${legsB}</g>
+<g>${blink('1;0', 0.5)}${legsA}</g><g opacity="0">${blink('0;1', 0.5)}${legsB}</g>
 ${nose}
 </g></g>
 ${snow}
