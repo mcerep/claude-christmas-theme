@@ -3,40 +3,32 @@ import type { Register, ThemeSetArgs } from 'claude-code'
 import { makeColors } from './make-colors.js'
 import { SCENE } from './scene.js'
 
-// Midnight-blue Christmas Eve by night; a snowy morning by day.
+// Midnight-blue Christmas Eve. The scene is always night, so the theme is
+// dark-only: light text in either app mode. Secondary and muted text (the
+// thinking text, the spinner's label) are bright enough to read over the art.
 const { theme, problems } = makeColors({
   label: 'Christmas Eve',
-  roles: { accent: '#d64545', danger: '#e05555', success: '#3fa66b', warning: '#e0a81e', pro: '#9a6bc4' },
-  light: {
-    gray: {
-      anchors: {
-        'surface-0': '#e4ecf7',
-        'surface-1': '#eef3fb',
-        'surface-2': '#f7fafe',
-        'text-primary': '#16203a',
-        'text-secondary': '#3a4765',
-        'text-muted': '#5c6a88',
-      },
-    },
-  },
+  only: 'dark',
+  roles: { accent: '#f2c14e', danger: '#ff6b6b', success: '#5fd18c', warning: '#ffc857', pro: '#c9a7ff' },
   dark: {
     gray: {
       anchors: {
         'surface-0': '#0a1326',
         'surface-1': '#111c36',
         'surface-2': '#182545',
-        'surface-3': '#1f2e52',
-        'text-primary': '#eef3ff',
-        'text-secondary': '#c4d0ea',
-        'text-muted': '#93a2c6',
+        'surface-3': '#1c2a4c',
+        'text-primary': '#f6f8ff',
+        'text-secondary': '#e2e8f8',
+        'text-muted': '#c3cde6',
       },
     },
   },
 })
 
+// A thicker veil behind the panels so words stand off the tiles.
 const LOOK: ThemeSetArgs = {
   colors: theme,
-  backdrop: { scene: 'christmas', glass: { blur: 2, tint: '#0a1326', opacity: 0.3 } },
+  backdrop: { scene: 'christmas', glass: { blur: 4, tint: '#0a1326', opacity: 0.55 } },
 }
 
 export const register: Register = on => {
