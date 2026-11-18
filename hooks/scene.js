@@ -233,8 +233,12 @@ const BULBS = bulbPts
 // running well past both edges so a wide window never sees the end.
 let groundTop = ''
 const groundPts = []
+// The ground is level under the house and trees (and a little either side),
+// so they stand on the snow instead of over a dip.
+const FLAT = [[HX - 2, HX + 23], ...TREES.map(([x]) => [x - 2, x + 15])]
 for (let c = -80; c < 240; c++) {
-  const top = GROUND - Math.round(1.2 + 1.2 * Math.sin(c * 0.31) + 0.8 * Math.sin(c * 0.11 + 1))
+  const flat = FLAT.some(([a, b]) => c >= a && c <= b)
+  const top = flat ? GROUND : GROUND - Math.round(1.2 + 1.2 * Math.sin(c * 0.31) + 0.8 * Math.sin(c * 0.11 + 1))
   groundTop += `<use href="#w${(((c * 7) % 4) + 4) % 4}" x="${c * T}" y="${top * T}"/>`
   groundPts.push(`${c * T},${(top + 1) * T}`, `${(c + 1) * T},${(top + 1) * T}`)
 }
@@ -310,9 +314,11 @@ ${SHADOW(shadowPath(MOON, MX + 1, MY + 2))}
 <use href="#moon" x="${MX * T}" y="${MY * T}"/>
 ${groundFill}
 ${groundTop}
-${SHADOW(TREES.map(([x, y]) => shadowPath(TREE, x + 2, y)).join('') + shadowPath(HOUSE, HX + 2, HY))}
+${SHADOW(TREES.map(([x, y]) => shadowPath(TREE.slice(0, -1), x + 2, y)).join('') + shadowPath(HOUSE.slice(0, -1), HX + 2, HY))}
 ${TREES.map(([x, y]) => `<use href="#tree" x="${x * T}" y="${y * T}"/>`).join('')}
 <use href="#house" x="${HX * T}" y="${HY * T}"/>
+${TREES.map(([x]) => tiles(['w'.repeat(17)], x - 2, GROUND, 3)).join('')}
+${tiles(['w'.repeat(25)], HX - 2, GROUND, 5)}
 <circle cx="${(HX + 5) * T + 4.5}" cy="${winY}" r="38" fill="url(#wglow)" opacity="0.35">${fade('0.35;0.6;0.35', 3.5)}</circle>
 <circle cx="${(HX + 15) * T + 4.5}" cy="${winY}" r="38" fill="url(#wglow)" opacity="0.35">${fade('0.35;0.6;0.35', 3.5, -1.7)}</circle>
 ${BULBS}
