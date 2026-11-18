@@ -46,9 +46,14 @@ export const register: Register = on => {
     if (e.surface !== 'desktop' && e.surface !== 'mobile') return next(e)
     if (e.props.scene !== 'christmas') return next(e)
     const { Svg } = $.ui.resolve(e)
+    // The app asks again whenever the window's width changes. Stamping the
+    // width into the drawing (an invisible comment) makes each size a new
+    // document, so the app loads it fresh and the animation restarts instead
+    // of staying frozen after a resize.
+    const width = e.viewport?.columns ?? 0
     return (
       <Svg
-        source={SCENE}
+        source={SCENE.replace('<defs>', `<!-- width ${width} --><defs>`)}
         alt="Pixel-tile mosaic of Christmas Eve: snow falling as Santa's sleigh and reindeer fly past the moon, over a house strung with twinkling lights"
         isInteractive
       />
