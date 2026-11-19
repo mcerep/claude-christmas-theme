@@ -1,5 +1,6 @@
 {
-  "name": "christmas-eve",
-  "version": "0.1.1",
-  "description": "A Christmas Eve theme: falling snow, Santa's sleigh and reindeer flying past, and a house strung with twinkling lights."
+  "name": "christmas-eve-plus",
+  "version": "0.2.0",
+  "description": "Christmas Eve theme, extended: snow, Santa's sleigh, a pixel-art Green Bank Telescope, a black hole binary and a pulsar, a grazing doe and a snowman, tuned to keep animating in the Claude desktop app.",
+  "author": { "name": "mcerep" }
 }

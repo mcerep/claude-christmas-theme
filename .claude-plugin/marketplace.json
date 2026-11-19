@@ -1,6 +1,6 @@
 {
-  "name": "my-mods",
-  "description": "A pixel-art Christmas Eve theme for Claude Code.",
-  "owner": { "name": "mebessusn" },
-  "plugins": [{ "name": "christmas-eve", "source": "./" }]
+  "name": "christmas-eve-plus",
+  "description": "An extended pixel-art Christmas Eve theme for Claude Code (fork of mebessusn/claude-christmas-theme).",
+  "owner": { "name": "mcerep" },
+  "plugins": [{ "name": "christmas-eve-plus", "source": "./" }]
 }
